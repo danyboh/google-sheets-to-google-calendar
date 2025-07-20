@@ -20,22 +20,29 @@ module.exports = {
     ecmaVersion: 2020
   },
   env: {
-    node: true,
+    'node': true,
     'googleappsscript/googleappsscript': true
   },
   rules: {
+    'require-jsdoc': 'off',
+    'jsdoc/require-jsdoc': 'off',
+    'jsdoc/require-param': 'off',
+    'jsdoc/require-returns': 'off',
+    'jsdoc/check-tag-names': 'off',
+    'jsdoc/check-types': 'off',
+    'linebreak-style': 'off',
     'comma-dangle': ['error', 'never'],
-    'max-len': ['error', { code: 100 }],
+    'max-len': ['error', {code: 100}],
     'camelcase': ['error', {
       'ignoreDestructuring': true,
       'ignoreImports': true,
-      'allow': ['access_type', 'redirect_uris'],
+      'allow': ['access_type', 'redirect_uris']
     }],
     'guard-for-in': 'off',
     'no-var': 'off', // ES3
     'no-unused-vars': 'off' // functions aren't used.
   },
   plugins: [
-     'googleappsscript'
+    'googleappsscript'
   ]
-}
+};

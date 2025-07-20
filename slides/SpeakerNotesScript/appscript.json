@@ -1,8 +1,0 @@
-{
-  "timeZone": "America/New_York",
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/documents",
-    "https://www.googleapis.com/auth/presentations.currentonly"
-  ],
-  "exceptionLogging": "STACKDRIVER"
-}

@@ -1,0 +1,136 @@
+ 
+<style>
+    #loader {
+        font-size: 14px;
+        margin: 10px;
+    }
+    #form {
+        display: none;
+    }
+</style>
+<div id="loader">🔄 Loading settings...</div>
+
+<div id="form">
+  <label>Літера колонки для назви івенту (Наприклад: A)</label> <br/>
+  <input type="text" id="eventNameCol" /> <br/>
+  <label>Літера колонки для деталей івенту </label> <br/>
+  <input type="text" id="eventDetailsCol" /> <br/>
+  <label>Літера колонки для дати івенту </label> <br/>
+  <input type="text" id="eventDateCol" /> <br/>
+  <label>Літера колонки для ідентифікатора івенту </label> <br/>
+  <input type="text" id="eventIdCol" /> <br/>
+  <label>Літера колонки для чекбоксу </label> <br/>
+  <input type="text" id="checkboxCol" /> <br/>
+  <label>Айді календаря </label> <br/>
+  <input type="text" id="calendarId" /> <br/>
+  <button onclick="save()">Save</button> <br/>
+</div>
+
+<script defer>
+
+google.script.run
+    .withSuccessHandler(config => {
+        toggleLoading(false);
+        if(!config) return;
+        if (config.eventNameCol) {
+            document.getElementById('eventNameCol').value = config.eventNameCol;
+        }
+        if (config.eventDetailsCol) {
+            document.getElementById('eventDetailsCol').value = config.eventDetailsCol;
+        }
+        if (config.eventDateCol) {
+            document.getElementById('eventDateCol').value = config.eventDateCol;
+        }
+        if (config.eventIdCol) {
+            document.getElementById('eventIdCol').value = config.eventIdCol;
+        }
+        if (config.calendarId) {
+            document.getElementById('calendarId').value = config.calendarId;
+        }
+        if (config.checkboxCol) {
+            document.getElementById('checkboxCol').value = config.checkboxCol;
+        }
+
+    })
+    .withFailureHandler(err => {
+        document.getElementById('loader').innerText = '⚠️ Failed to load settings.';
+        console.error(err);
+        })
+    .getSettings();
+
+function save() {
+    toggleLoading(true);
+  const eventNameCol = document.getElementById('eventNameCol').value;
+  const eventDetailsCol = document.getElementById('eventDetailsCol').value;
+  const eventDateCol = document.getElementById('eventDateCol').value;
+  const eventIdCol = document.getElementById('eventIdCol').value;
+  const calendarId = document.getElementById('calendarId').value;
+  const checkboxCol = document.getElementById('checkboxCol').value;
+
+  let isInvalid = false;
+  let colInvalidLabel = '';
+  
+  [{colValue: eventNameCol, colLabel: 'Колонки назви івенту'},  
+  {colValue: eventDetailsCol, colLabel: 'Колонки деталей'},  
+  {colValue: eventDateCol, colLabel: 'Колонки дати'},  
+  {colValue: eventIdCol, colLabel: 'Колонки айді'},
+  {colValue: checkboxCol, colLabel: 'Колонки чекбоксу'},
+].forEach(({colValue, colLabel}) => {
+    const isValid = isSingleLetter(colValue);
+    if(!isValid) {
+        isInvalid = true;
+        colInvalidLabel = colLabel;
+    }
+  });
+
+  if(isInvalid) {
+    google.script.run
+    .showError(`Неправильно введена літера ${colInvalidLabel} , приклад: J`);
+    toggleLoading(false);
+    return;
+  }
+
+  if(!calendarId) {
+    google.script.run
+    .showError('Введіть айді календаря для інтеграції');
+    toggleLoading(false);
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(() => {
+        google.script.run
+        .showSuccess('Конфігурація успішно збережена');
+        google.script.host.close();
+
+    })
+    .withFailureHandler(err => {
+        toggleLoading(false);
+         google.script.run
+        .showError('Виникла помилка при збереженні конфігурації: ' + err.message);
+      })
+    .saveSettings({ 
+        eventNameCol,
+        eventDetailsCol,
+        eventDateCol,
+        eventIdCol,
+        calendarId,
+        checkboxCol
+     });
+}
+
+function isSingleLetter(str) {
+  return /^[A-Za-z]$/.test(str);
+}
+
+function toggleLoading(value) {
+    if(value) {
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('form').style.display = 'none';
+    } else {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('form').style.display = 'block';
+    }
+
+}
+</script>
