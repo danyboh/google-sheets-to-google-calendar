@@ -22,7 +22,7 @@ function letterToColumn(letter) {
   return column;
 }
 
-function onEdit(e) {
+function onEditSavingEvent(e) {
   if (!mainSettings) {
     mainSettings = getSettings();
   };
@@ -38,30 +38,32 @@ function onEdit(e) {
 
   if (currentColumn === columnFromConfig && e.value === 'TRUE') {
     showSuccess('this is right column');
-    const data = createEventData();
+    const data = createEventData(row);
     googleEvent(data);
   }
 }
 
 function googleEvent(data) {
-  if (data.eventId) {
+  // it is not going to create event for some reason
+  if (data.payload.eventId) {
     updateEvent(data);
   } else {
+    showSuccess('it is on create event');
     createEvent(data);
   }
 }
 
-function createEvent({eventId, name, details, date}) {
-  const now = new Date();
-  const dateAt16 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 0, 0);
-  const event = calendar.createEvent(name, dateAt16, dateAt16, {
+function createEvent(data) {
+  const {eventId, name, details, date} = data.payload;
+  const event = calendar.createEvent(name, date, date, {
     // guests: 'ksyuzozu@gmail.com',
-    description: datails
+    description: details
   });
 
   const eventIdScope = event.getId();
 
-  console.log(eventIdScope);
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.getRange(data.params.row, data.params.eventIdCol).setValue(eventIdScope);
 }
 
 function updateEvent(data) {
@@ -70,11 +72,12 @@ function updateEvent(data) {
   if (!event) {
     createEvent(data);
   } else {
+    console.log('updateevent');
     const now = new Date();
     const dateAt17 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
-    event.setTime(dateAt17, dateAt17);
-    event.setTitle(name);
-    event.setDescription(details);
+    // event.setTime(dateAt17, dateAt17);
+    // event.setTitle(name);
+    // event.setDescription(details);
   }
 }
 
@@ -89,14 +92,21 @@ function createEventData(row) {
   const date = sheet.getRange(row, dateCol).getValue();
   const eventId = sheet.getRange(row, eventIdCol).getValue();
   return {
-    name,
-    details,
-    date,
-    eventId
+    payload: {
+      name,
+      details,
+      date,
+      eventId
+    },
+    params: {
+      row,
+      eventIdCol
+    }
+
   };
 }
 
-function onOpen() {
+function onOpenWithCalendar() {
   mainSettings = getSettings();
   SpreadsheetApp.getUi()
       .createMenu('⚙️ Sheets to Calendar')
