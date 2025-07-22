@@ -1,153 +1,71 @@
-# Google Apps Script Samples
+# Інтеграція Google Calendar з Google Sheets
 
-Various sample code and projects for the Google Apps Script platform, a JavaScript platform in the cloud.
+Цей проект дозволяє автоматично створювати події в Google Calendar на основі даних з Google Sheets.
 
-Learn more at [developers.google.com](https://developers.google.com/apps-script).
+## Встановлення та налаштування
 
-## Google APIs
+### 1. Налаштування Apps Script
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/admin_96dp.png"
-align="left"
-width="96px"/>
-### AdminSDK
-- [Manage domains and apps](adminSDK)
-<br><br>
+1. Відкрийте вашу Google Sheets таблицю
+2. Перейдіть до **Extensions** → **Apps Script**
+3. У редакторі створіть новий файл з назвою `create-google-meeting.gs`
+4. Скопіюйте вміст з файлу `create-google-meeting.gs` в створений файл
+5. Створіть ще один файл з назвою `settings.html`
+6. Скопіюйте вміст з файлу `settings.html` в створений файл
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/google_cloud_96dp.png"
-align="left"
-width="96px"/>
-### Advanced Services
-- [Access Google APIs via Advanced Google services](advanced/)
-<br><br>
+### 2. Збереження та дозволи
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/calendar_96dp.png"
-align="left"
-width="96px"/>
-### Calendar
-- [List upcoming events](calendar/quickstart)
-- [Create a vacation calendar](solutions/automations/vacation-calendar/Code.js)
+1. Збережіть обидва файли (Ctrl+S)
+2. Надайте необхідні дозволи Google для виконання скрипту:
+   - Дозвіл на доступ до Google Calendar
+   - Дозвіл на редагування Google Sheets
+   - Дозвіл на відправку email (якщо потрібно)
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/classroom_96dp.png"
-align="left"
-width="96px"/>
-### Classroom
-- [Manage Google Classroom](classroom/quickstart)
-<br><br>
+### 3. Налаштування тригерів
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/data_studio_96dp.png"
-align="left"
-width="96px"/>
-### Data Studio
-- [Build a connector](data-studio/build.gs)
-- [Authentication and Authorization](data-studio/auth.gs)
+Перейдіть до розділу **Triggers** в Apps Script і створіть два тригери:
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/docs_96dp.png"
-align="left"
-width="96px"/>
-### Docs
-- [Cursor inspector add-on](docs/cursorInspector)
-- [Translate add-on](docs/translate)
+#### Тригер 1: onEditSavingEvent
+- **Function**: `onEditSavingEvent`
+- **Event Type**: `On Edit`
+- **Опис**: Спрацьовує при редагуванні таблиці
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/drive_96dp.png"
-align="left"
-width="96px"/>
-### Drive
-- [Manage Google Drive files and folders](drive/quickstart)
-- [View Google Drive activity](drive/activity)
+#### Тригер 2: onOpenWithCalendar
+- **Function**: `onOpenWithCalendar`
+- **Event Type**: `On Open`
+- **Опис**: Спрацьовує при відкритті таблиці
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/forms_96dp.png"
-align="left"
-width="96px"/>
-### Forms
-- [Notification add-on](forms)
-<br><br>
+### 4. Конфігурація налаштувань
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/gmail_96dp.png"
-align="left"
-width="96px"/>
-### Gmail
-- [Sending email](gmail/sendingEmails)
-- [Mailmerge: Merge a template email with content](gmail/mailmerge)
+1. Після створення тригерів відкрийте вашу Google Sheets таблицю
+2. З'явиться нова вкладка **"Подія з календаря - Налаштування"**
+3. Заповніть всі необхідні поля в налаштуваннях:
+   - Колонки для дати та часу
+   - Колонки для назви та опису події
+   - Додаткові параметри календаря
 
-<img
-src="https://www.gstatic.com/images/icons/material/system/2x/people_black_48dp.png"
-align="left"
-width="96px"/>
-### People
-- [Listing Connections](people/quickstart)
-<br><br>
+## Структура проекту
 
-<img
-src="https://www.gstatic.com/images/branding/product/2x/sheets_96dp.png"
-align="left"
-width="96px"/>
-### Sheets
-- [Managing Responses for Google Forms](sheets)
-- [Menus and Custom Functions](sheets)
-
-<img
-src="https://www.gstatic.com/images/branding/product/2x/slides_96dp.png"
-align="left"
-width="96px"/>
-### Slides
-- [Translate Slides Add-on](slides/translate)
-- [Progress Bars add-on](slides/progress)
-
-<img
-src="https://www.gstatic.com/images/branding/product/2x/tasks_96dp.png"
-align="left"
-width="96px"/>
-### Tasks
-- [List Tasks](tasks/quickstart)
-- [Simple Tasks Web App](tasks/simpleTasks)
-
-<img
-src="https://www.gstatic.com/images/icons/material/system/2x/code_grey600_48dp.png"
-align="left"
-width="96px"/>
-### Templates
-- Build off a working framework for new Apps Script projects.
-<br><br>
-
-<img
-src="https://www.gstatic.com/images/icons/material/system/2x/alarm_grey600_48dp.png"
-align="left"
-width="96px"/>
-### Triggers
-- Call an Apps Script function such as `onOpen`, `onEdit`, or `onInstall` in an add-on
-- Create a [time-driven trigger](https://developers.google.com/apps-script/guides/triggers/installable#time_driven_triggers)
-
-## Codelabs
-
-Codelab tutorials combine detailed explanation, coding exercises, and documented best practices to help engineers get up to speed with key Google technologies. Here's a list of Apps Script codelabs:
-
-- [Apps Script Intro](http://g.co/codelabs/apps-script-intro)
-- [Apps Script CLI – clasp](http://g.co/codelabs/clasp)
-- [BigQuery + Sheets + Slides](http://g.co/codelabs/bigquery-sheets-slides)
-- [Docs Add-on + Cloud Natural Language API](http://g.co/codelabs/nlp-docs)
-- [Gmail Add-ons](http://g.co/codelabs/gmail-add-ons)
-- [Google Chat Apps](https://developers.google.com/codelabs/chat-apps-script)
-
-## Clone using the `clasp` command-line tool
-
-Learn how to clone, pull, and push Apps Script projects on the command-line
-using [clasp](https://developers.google.com/apps-script/guides/clasp).
-
-## Lint
-
-Run ESLint over this whole repository with:
-
-```shell
-npm run lint
+```
+├── create-google-meeting.gs    # Основний скрипт для роботи з календарем
+├── settings.html              # HTML-форма для налаштувань
+└── README.md                  # Цей файл з інструкціями
 ```
 
-This command will fix simple errors.
+## Використання
+
+1. Після налаштування введіть дані про події у відповідні колонки таблиці
+2. Події автоматично створюватимуться в Google Calendar
+3. При необхідності змініть налаштування через вкладку конфігурації
+
+## Вимоги
+
+- Google Account з доступом до Google Sheets та Google Calendar
+- Дозволи на виконання Apps Script
+
+## Підтримка
+
+При виникненні проблем перевірте:
+- Правильність налаштування тригерів
+- Надання необхідних дозволів
+- Заповнення всіх обов'язкових полів у налаштуваннях
