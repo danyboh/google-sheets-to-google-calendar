@@ -1,136 +1,398 @@
- 
-<style>
-    #loader {
-        font-size: 14px;
-        margin: 10px;
-    }
-    #form {
-        display: none;
-    }
-</style>
-<div id="loader">🔄 Loading settings...</div>
-
-<div id="form">
-  <label>Літера колонки для назви івенту (Наприклад: A)</label> <br/>
-  <input type="text" id="eventNameCol" /> <br/>
-  <label>Літера колонки для деталей івенту </label> <br/>
-  <input type="text" id="eventDetailsCol" /> <br/>
-  <label>Літера колонки для дати івенту </label> <br/>
-  <input type="text" id="eventDateCol" /> <br/>
-  <label>Літера колонки для ідентифікатора івенту </label> <br/>
-  <input type="text" id="eventIdCol" /> <br/>
-  <label>Літера колонки для чекбоксу </label> <br/>
-  <input type="text" id="checkboxCol" /> <br/>
-  <label>Айді календаря </label> <br/>
-  <input type="text" id="calendarId" /> <br/>
-  <button onclick="save()">Save</button> <br/>
-</div>
-
-<script defer>
-
-google.script.run
-    .withSuccessHandler(config => {
-        toggleLoading(false);
-        if(!config) return;
-        if (config.eventNameCol) {
-            document.getElementById('eventNameCol').value = config.eventNameCol;
-        }
-        if (config.eventDetailsCol) {
-            document.getElementById('eventDetailsCol').value = config.eventDetailsCol;
-        }
-        if (config.eventDateCol) {
-            document.getElementById('eventDateCol').value = config.eventDateCol;
-        }
-        if (config.eventIdCol) {
-            document.getElementById('eventIdCol').value = config.eventIdCol;
-        }
-        if (config.calendarId) {
-            document.getElementById('calendarId').value = config.calendarId;
-        }
-        if (config.checkboxCol) {
-            document.getElementById('checkboxCol').value = config.checkboxCol;
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Налаштування календаря</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-    })
-    .withFailureHandler(err => {
-        document.getElementById('loader').innerText = '⚠️ Failed to load settings.';
-        console.error(err);
-        })
-    .getSettings();
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-function save() {
-    toggleLoading(true);
-  const eventNameCol = document.getElementById('eventNameCol').value;
-  const eventDetailsCol = document.getElementById('eventDetailsCol').value;
-  const eventDateCol = document.getElementById('eventDateCol').value;
-  const eventIdCol = document.getElementById('eventIdCol').value;
-  const calendarId = document.getElementById('calendarId').value;
-  const checkboxCol = document.getElementById('checkboxCol').value;
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            width: 300px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
 
-  let isInvalid = false;
-  let colInvalidLabel = '';
-  
-  [{colValue: eventNameCol, colLabel: 'Колонки назви івенту'},  
-  {colValue: eventDetailsCol, colLabel: 'Колонки деталей'},  
-  {colValue: eventDateCol, colLabel: 'Колонки дати'},  
-  {colValue: eventIdCol, colLabel: 'Колонки айді'},
-  {colValue: checkboxCol, colLabel: 'Колонки чекбоксу'},
-].forEach(({colValue, colLabel}) => {
-    const isValid = isSingleLetter(colValue);
-    if(!isValid) {
-        isInvalid = true;
-        colInvalidLabel = colLabel;
-    }
-  });
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
 
-  if(isInvalid) {
-    google.script.run
-    .showError(`Неправильно введена літера ${colInvalidLabel} , приклад: J`);
-    toggleLoading(false);
-    return;
-  }
+        .header h1 {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
 
-  if(!calendarId) {
-    google.script.run
-    .showError('Введіть айді календаря для інтеграції');
-    toggleLoading(false);
-    return;
-  }
+        .header p {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.3;
+        }
 
-  google.script.run
-    .withSuccessHandler(() => {
+        #loader {
+            text-align: center;
+            font-size: 14px;
+            color: #667eea;
+            padding: 20px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 6px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #form {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+            font-weight: 500;
+            font-size: 11px;
+            letter-spacing: 0.2px;
+            line-height: 1.3;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #333;
+            background: #fff;
+            transition: all 0.3s ease;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        input[type="text"]:hover {
+            border-color: #b8c6db;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .save-btn:active {
+            transform: translateY(0);
+        }
+
+        .save-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .save-btn:hover:before {
+            left: 100%;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .column-group {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .group-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .calendar-section {
+            background: rgba(118, 75, 162, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Налаштування календаря</h1>
+            <p>Налаштуйте інтеграцію з Google Calendar</p>
+        </div>
+
+        <div id="loader">
+            <div class="spinner"></div>
+            Завантаження...
+        </div>
+
+        <div id="form" class="fade-in">
+            <div class="column-group">
+                <div class="group-title">📊 Налаштування колонок</div>
+                
+                <div class="form-group">
+                    <label>Літера колонки для назви івенту <span class="required">*</span></label>
+                    <input type="text" id="eventNameCol" placeholder="A" maxlength="1" />
+                    <div class="form-hint">Наприклад: A</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Літера колонки для деталей івенту <span class="required">*</span></label>
+                    <input type="text" id="eventDetailsCol" placeholder="B" maxlength="1" />
+                    <div class="form-hint">Наприклад: B</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Літера колонки для дати івенту <span class="required">*</span></label>
+                    <input type="text" id="eventDateCol" placeholder="C" maxlength="1" />
+                    <div class="form-hint">Наприклад: C</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Літера колонки для ідентифікатора івенту <span class="required">*</span></label>
+                    <input type="text" id="eventIdCol" placeholder="D" maxlength="1" />
+                    <div class="form-hint">Наприклад: D</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Літера колонки для чекбоксу <span class="required">*</span></label>
+                    <input type="text" id="checkboxCol" placeholder="E" maxlength="1" />
+                    <div class="form-hint">Наприклад: E</div>
+                </div>
+            </div>
+
+            <div class="calendar-section">
+                <div class="group-title">📅 Налаштування календаря</div>
+                <div class="form-group">
+                    <label>Айді календаря <span class="required">*</span></label>
+                    <input type="text" id="calendarId" placeholder="calendar@gmail.com" />
+                    <div class="form-hint">ID вашого Google Calendar</div>
+                </div>
+            </div>
+
+            <button class="save-btn" onclick="save()">💾 Зберегти налаштування</button>
+        </div>
+    </div>
+
+    <script defer>
         google.script.run
-        .showSuccess('Конфігурація успішно збережена');
-        google.script.host.close();
+            .withSuccessHandler(config => {
+                toggleLoading(false);
+                if(!config) return;
+                if (config.eventNameCol) {
+                    document.getElementById('eventNameCol').value = config.eventNameCol;
+                }
+                if (config.eventDetailsCol) {
+                    document.getElementById('eventDetailsCol').value = config.eventDetailsCol;
+                }
+                if (config.eventDateCol) {
+                    document.getElementById('eventDateCol').value = config.eventDateCol;
+                }
+                if (config.eventIdCol) {
+                    document.getElementById('eventIdCol').value = config.eventIdCol;
+                }
+                if (config.calendarId) {
+                    document.getElementById('calendarId').value = config.calendarId;
+                }
+                if (config.checkboxCol) {
+                    document.getElementById('checkboxCol').value = config.checkboxCol;
+                }
+            })
+            .withFailureHandler(err => {
+                document.getElementById('loader').innerHTML = '⚠️ Failed to load settings.';
+                console.error(err);
+            })
+            .getSettings();
 
-    })
-    .withFailureHandler(err => {
-        toggleLoading(false);
-         google.script.run
-        .showError('Виникла помилка при збереженні конфігурації: ' + err.message);
-      })
-    .saveSettings({ 
-        eventNameCol,
-        eventDetailsCol,
-        eventDateCol,
-        eventIdCol,
-        calendarId,
-        checkboxCol
-     });
-}
+        function save() {
+            toggleLoading(true);
+            const eventNameCol = document.getElementById('eventNameCol').value;
+            const eventDetailsCol = document.getElementById('eventDetailsCol').value;
+            const eventDateCol = document.getElementById('eventDateCol').value;
+            const eventIdCol = document.getElementById('eventIdCol').value;
+            const calendarId = document.getElementById('calendarId').value;
+            const checkboxCol = document.getElementById('checkboxCol').value;
 
-function isSingleLetter(str) {
-  return /^[A-Za-z]$/.test(str);
-}
+            let isInvalid = false;
+            let colInvalidLabel = '';
+            
+            [{colValue: eventNameCol, colLabel: 'Колонки назви івенту'},  
+            {colValue: eventDetailsCol, colLabel: 'Колонки деталей'},  
+            {colValue: eventDateCol, colLabel: 'Колонки дати'},  
+            {colValue: eventIdCol, colLabel: 'Колонки айді'},
+            {colValue: checkboxCol, colLabel: 'Колонки чекбоксу'},
+            ].forEach(({colValue, colLabel}) => {
+                const isValid = isSingleLetter(colValue);
+                if(!isValid) {
+                    isInvalid = true;
+                    colInvalidLabel = colLabel;
+                }
+            });
 
-function toggleLoading(value) {
-    if(value) {
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('form').style.display = 'none';
-    } else {
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('form').style.display = 'block';
-    }
+            if(isInvalid) {
+                google.script.run
+                .showError(`Неправильно введена літера ${colInvalidLabel} , приклад: J`);
+                toggleLoading(false);
+                return;
+            }
 
-}
-</script>
+            if(!calendarId) {
+                google.script.run
+                .showError('Введіть айді календаря для інтеграції');
+                toggleLoading(false);
+                return;
+            }
+
+            google.script.run
+                .withSuccessHandler(() => {
+                    google.script.run
+                    .showSuccess('Конфігурація успішно збережена');
+                    google.script.host.close();
+                })
+                .withFailureHandler(err => {
+                    toggleLoading(false);
+                    google.script.run
+                    .showError('Виникла помилка при збереженні конфігурації: ' + err.message);
+                })
+                .saveSettings({ 
+                    eventNameCol,
+                    eventDetailsCol,
+                    eventDateCol,
+                    eventIdCol,
+                    calendarId,
+                    checkboxCol
+                });
+        }
+
+        function isSingleLetter(str) {
+            return /^[A-Za-z]$/.test(str);
+        }
+
+        function toggleLoading(value) {
+            if(value) {
+                document.getElementById('loader').style.display = 'flex';
+                document.getElementById('form').style.display = 'none';
+            } else {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('form').style.display = 'block';
+            }
+        }
+
+        // Add input formatting for column letters
+        document.addEventListener('DOMContentLoaded', function() {
+            const columnInputs = ['eventNameCol', 'eventDetailsCol', 'eventDateCol', 'eventIdCol', 'checkboxCol'];
+            
+            columnInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if(input) {
+                    input.addEventListener('input', function(e) {
+                        e.target.value = e.target.value.toUpperCase();
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -27,9 +27,6 @@ function onEditSavingEvent(e) {
     mainSettings = getSettings();
   };
 
-  if (!calendar) {
-    calendar = CalendarApp.getCalendarById(mainSettings.calendarId);
-  }
   const range = e.range;
   const row = range.getRow();
   const col = range.getColumn();
@@ -37,18 +34,19 @@ function onEditSavingEvent(e) {
   const columnFromConfig = mainSettings.checkboxCol.toLowerCase();
 
   if (currentColumn === columnFromConfig && e.value === 'TRUE') {
-    showSuccess('this is right column');
     const data = createEventData(row);
     googleEvent(data);
   }
 }
 
 function googleEvent(data) {
-  // it is not going to create event for some reason
+  if (!calendar) {
+    calendar = CalendarApp.getCalendarById(mainSettings.calendarId);
+  }
+
   if (data.payload.eventId) {
     updateEvent(data);
   } else {
-    showSuccess('it is on create event');
     createEvent(data);
   }
 }
@@ -60,24 +58,26 @@ function createEvent(data) {
     description: details
   });
 
+  event.addPopupReminder(10);
+
   const eventIdScope = event.getId();
 
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   sheet.getRange(data.params.row, data.params.eventIdCol).setValue(eventIdScope);
+
+  showSuccess('✅ Подію успішно створено');
 }
 
 function updateEvent(data) {
+  const {eventId, name, details, date} = data.payload;
   const event = calendar.getEventById(eventId);
-  const {eventId, name, details, date} = data;
   if (!event) {
     createEvent(data);
   } else {
-    console.log('updateevent');
-    const now = new Date();
-    const dateAt17 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
-    // event.setTime(dateAt17, dateAt17);
-    // event.setTitle(name);
-    // event.setDescription(details);
+    event.setTime(date, date);
+    event.setTitle(name);
+    event.setDescription(details);
+    showSuccess('✅ Подію успішно змінено');
   }
 }
 
@@ -109,8 +109,8 @@ function createEventData(row) {
 function onOpenWithCalendar() {
   mainSettings = getSettings();
   SpreadsheetApp.getUi()
-      .createMenu('⚙️ Sheets to Calendar')
-      .addItem('Settings', 'showSettingsSidebar')
+      .createMenu('⚙️ Подія з таблиці')
+      .addItem('Налаштування', 'showSettingsSidebar')
       .addToUi();
 }
 
@@ -130,32 +130,9 @@ function getSettings() {
 
 function showSettingsSidebar() {
   const html = HtmlService.createHtmlOutputFromFile('settings')
-      .setTitle('App Settings');
+      .setTitle('Налаштування плагіну');
   SpreadsheetApp.getUi().showSidebar(html);
 }
-
-function insertDate() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var cell = sheet.getRange('K2');
-  cell.setValue(new Date());
-}
-
-function insertCurrentColumn(col) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var cell = sheet.getRange('K3');
-  cell.setValue(col);
-}
-
-function handleCheckboxChange(value) {
-  console.log('insider the function!', value);
-
-  if (value === 'TRUE') {
-    insertDate();
-    console.log('Checkbox checked!');
-  }
-}
-
-const msg = '✅ Action completed successfully!';
 
 function showError(text) {
   showNotification(text, 'Error');
